@@ -1,0 +1,16 @@
+# Environnement virtuel Python
+venv/
+
+# Caches Python
+__pycache__/
+*.py[cod]
+
+# Secrets / configuration locale
+.env
+
+# Donnees de travail du pipeline (recreees a l'execution)
+downloads/
+output/
+
+# Artefact Windows (nom de peripherique reserve)
+nul
