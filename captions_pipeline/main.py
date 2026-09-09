@@ -14,7 +14,9 @@ l'ordre, les cinq etapes suivantes en affichant un resume apres chacune :
      l'histoire par le modele OpenRouter (generate_script) ;
   4. generation d'un .srt reparti sur la duree *reelle* de la video telechargee
      (mesuree avec ffprobe) ;
-  5. envoi du .srt vers le VPS (tools.sync_video.upload).
+  5. envoi des sous-titres au backend en HTTP POST
+     (modules.subtitle_sender.send_subtitles) *et*, en parallele pour l'instant,
+     depot du .srt sur le VPS via scp (tools.sync_video.upload).
 
 Usage :
     python main.py 6889258
@@ -36,6 +38,7 @@ sys.path.insert(0, RACINE)
 
 from modules.script_generator import build_prompt, generate_script
 from modules.subtitle_generator import generate_subtitles
+from modules.subtitle_sender import send_subtitles
 from modules.theme_selector import fetch_themes, theme_instruction
 from tools import sync_video
 from tools.frame_tagger_test import (
@@ -203,8 +206,27 @@ def main():
     for ligne in lignes_srt[:6]:
         print(f"   {ligne}")
 
-    # --- Etape 5 : envoi du .srt vers le VPS ----------------------------
-    _titre_etape(5, "Envoi des sous-titres vers le VPS")
+    # --- Etape 5 : envoi des sous-titres (backend + VPS) ---------------
+    _titre_etape(5, "Envoi des sous-titres (backend HTTP + VPS scp)")
+
+    # 5a. Nouvelle voie : POST des sous-titres au backend. send_subtitles ne
+    # leve jamais ; en cas d'echec elle logge un warning et renvoie
+    # {"success": False, ...}. Le .srt reste local et le depot scp ci-dessous
+    # prend le relais tant que la voie HTTP n'est pas validee en conditions
+    # reelles.
+    resultat_backend = send_subtitles(video_id, chemin_srt)
+    if resultat_backend.get("success"):
+        print(
+            f"-> Sous-titres envoyes au backend : "
+            f"{resultat_backend.get('count')} entree(s)"
+        )
+    else:
+        print(
+            f"-> Envoi au backend echoue (on garde le scp) : "
+            f"{resultat_backend.get('error')}"
+        )
+
+    # 5b. Voie historique conservee en parallele : depot du .srt sur le VPS.
     destination = sync_video.upload(video_id, chemin_srt)
     print(f"-> Sous-titres deposes sur le VPS : {destination}")
 
@@ -216,7 +238,12 @@ def main():
     print(f"  Video source   : {chemin_video} ({taille_mo:.1f} Mo, {duree:.2f} s)")
     print(f"  Frames taguees : {len(outline)}  ({total_tags} tags)")
     print(f"  Histoire       : {nb_mots} mots")
+    if resultat_backend.get("success"):
+        etat_backend = f"OK ({resultat_backend.get('count')} entrees)"
+    else:
+        etat_backend = f"echec ({resultat_backend.get('error')})"
     print(f"  Sous-titres    : {chemin_srt} ({nb_blocs} blocs) -> {destination}")
+    print(f"  Envoi backend  : {etat_backend}")
     print(f"  Duree totale   : {time.perf_counter() - t0_pipeline:.1f} s")
     print("=" * 70)
 
