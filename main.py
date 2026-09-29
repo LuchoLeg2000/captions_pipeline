@@ -40,6 +40,7 @@ from modules.script_generator import build_prompt, generate_script
 from modules.subtitle_generator import generate_subtitles
 from modules.subtitle_sender import send_subtitles
 from modules.theme_selector import fetch_themes, theme_instruction
+from modules.wd14_sender import send_wd14_tags
 from tools import sync_video
 from tools.frame_tagger_test import (
     charger_modele,
@@ -143,7 +144,7 @@ def main():
     # fetch_themes() renvoie [] (avec un avertissement) si le backend est
     # injoignable ou si la liste est vide -> l'histoire est alors generee
     # sans theme, sans interrompre le pipeline.
-    themes = fetch_themes()
+    themes = fetch_themes(video_id)
     if themes:
         print(f"-> {len(themes)} theme(s) narratif(s) disponible(s) depuis le backend")
     else:
@@ -175,6 +176,11 @@ def main():
     # theme_instruction() renvoie None (avec un avertissement) si la liste de
     # themes est vide ou si l'appel de selection echoue -> prompt par defaut.
     tags_detectes = sorted({tag for _, tags in outline for tag in tags})
+    resultat_wd14 = send_wd14_tags(video_id, tags_detectes)
+    if resultat_wd14.get("success"):
+        print(f"-> Tags WD14 envoyes au backend : {resultat_wd14.get('count')} tag(s)")
+    else:
+        print(f"-> Envoi des tags WD14 au backend echoue : {resultat_wd14.get('error')}")
     instruction_theme = theme_instruction(tags_detectes, themes)
     if instruction_theme:
         print("-> Theme narratif applique a l'histoire")

@@ -6,8 +6,8 @@ subtitle_sender.py
 Envoi des sous-titres au backend via HTTP, en remplacement (a terme) du
 depot scp du fichier .srt sur le VPS (cf. tools/sync_video.py:upload).
 
-Le backend expose POST {BACKEND_URL}/api/videos/{video_id}/subtitles et
-attend un corps JSON :
+Le backend expose POST {BACKEND_URL}/api/montage/videos/{video_id}/subtitles
+et attend un corps JSON :
 
     {"subtitles": [{"start": <float s>, "end": <float s>, "text": <str>}, ...]}
 
@@ -120,7 +120,7 @@ def _parser_srt(contenu: str) -> "list[dict]":
 def send_subtitles(video_id: int, srt_path: str) -> dict:
     """Parse `srt_path` et envoie les sous-titres au backend par HTTP POST.
 
-    POST {BACKEND_URL}/api/videos/{video_id}/subtitles avec le corps
+    POST {BACKEND_URL}/api/montage/videos/{video_id}/subtitles avec le corps
     {"subtitles": [{"start": float, "end": float, "text": str}, ...]}.
 
     Ne leve jamais : toute panne (fichier introuvable, .srt vide ou illisible,
@@ -158,7 +158,7 @@ def send_subtitles(video_id: int, srt_path: str) -> dict:
             )
             return {"success": False, "error": message}
 
-        url = f"{_base_url()}/api/videos/{video_id}/subtitles"
+        url = f"{_base_url()}/api/montage/videos/{video_id}/subtitles"
         try:
             reponse = httpx.post(
                 url, json={"subtitles": entrees}, timeout=TIMEOUT_POST

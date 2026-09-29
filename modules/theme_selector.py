@@ -42,7 +42,7 @@ def _base_url() -> str:
     return os.environ.get("BACKEND_URL", BACKEND_URL_DEFAUT).rstrip("/")
 
 
-def fetch_themes() -> "list[dict]":
+def fetch_themes(video_id: "str | int") -> "list[dict]":
     """Recupere la liste des themes depuis GET {BACKEND_URL}/api/themes.
 
     Renvoie la liste des themes (chaque theme est un dict avec au moins les
@@ -50,7 +50,7 @@ def fetch_themes() -> "list[dict]":
     de reponse non-2xx, de corps JSON illisible ou de liste vide : logge un
     avertissement et renvoie [] pour que le pipeline continue sans theme.
     """
-    url = f"{_base_url()}/api/themes"
+    url = f"{_base_url()}/api/themes?video_id={video_id}"
     try:
         reponse = httpx.get(url, timeout=10.0)
         reponse.raise_for_status()
