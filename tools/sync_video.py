@@ -5,9 +5,9 @@ sync_video.py
 
 Echange de fichiers avec le VPS de test (178.104.242.50) via scp :
   - download : recupere {video_id}_source.mp4 depuis
-    /mnt/storagebox/yournextscene/downloads/ vers le dossier local downloads/ ;
+    /data/pipeline/downloads/ vers le dossier local downloads/ ;
   - upload   : envoie un fichier .srt local vers
-    /mnt/storagebox/yournextscene/subtitles/{video_id}.srt sur le VPS.
+    /data/pipeline/subtitles/{video_id}.srt sur le VPS.
 
 scp est appele en sous-processus (subprocess). Sa sortie n'est pas
 capturee : scp affiche alors lui-meme sa barre de progression dans le
@@ -27,8 +27,8 @@ import sys
 RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 VPS = "root@178.104.242.50"
-DOSSIER_DOWNLOADS_VPS = "/mnt/storagebox/yournextscene/downloads"
-DOSSIER_SUBTITLES_VPS = "/mnt/storagebox/yournextscene/subtitles"
+DOSSIER_DOWNLOADS_VPS = "/data/pipeline/downloads"
+DOSSIER_SUBTITLES_VPS = "/data/pipeline/subtitles"
 DOSSIER_DOWNLOADS_LOCAL = os.path.join(RACINE, "downloads")
 
 

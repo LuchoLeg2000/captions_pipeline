@@ -74,14 +74,24 @@ def build_prompt(
         outline = ""
     else:
         ligne_sujet = (
-            "- Subject of the story: write one coherent story that follows the "
-            "chronological outline given after these rules. Each outline entry "
-            "is an on-screen moment with its visual tags; move through the "
-            "moments in order and make the story's progression match them.\n"
-            "- The outline timestamps are only an internal marker for the order "
-            "of events. The final text must never mention timestamps, seconds, "
-            "or minutes, and must never refer to the video's timing in any way. "
-            "The story must read as a natural narrative.\n"
+            "- Subject of the story: write in the style of short erotica captions commonly used "
+            "for adult short-form video content. INVENT an original scenario with specific "
+            "characters and a clear premise - do not just describe or caption what is shown.\n"
+            "- CRITICAL sentence style: use very short, fragmented, punchy sentences, often "
+            "WITHOUT a full subject or verb, like a string of quick beats rather than flowing "
+            "prose. Example of the target rhythm: \"No panties. No warnings. Just her ass in the "
+            "air.\" or \"The bedroom was suicide. The hallway was worse.\" Most sentences should be "
+            "under 8 words. Avoid long connected sentences with multiple clauses.\n"
+            "- Weave in one short line of dialogue in quotes for impact, not a full conversation.\n"
+            "- Include explicit sensory and physical detail, but only details that build the "
+            "fantasy and narrative - never a literal description of what is visually shown.\n"
+            "- Be explicit and graphic about physical actions and sexual acts, not just "
+            "suggestive or implied - describe what is actually happening in direct, unambiguous "
+            "terms, while keeping sentences short and punchy.\n"
+            "- Start in medias res, no slow scene-setting.\n"
+            "- End on a sharp, punchy final line, ideally with a twist, irony, or a reveal.\n"
+            "- The visual tags below are only a loose reference for pacing and setting - they are "
+            "NOT a script to follow or describe moment by moment. Invent freely.\n"
         )
         outline = "\n" + _bloc_outline(theme)
 
@@ -160,7 +170,16 @@ def openrouter_chat(messages: "list[dict]", max_tokens: int = 1000) -> str:
     )
     reponse.raise_for_status()
     donnees = reponse.json()
-    return donnees["choices"][0]["message"]["content"]
+    choix = donnees["choices"][0]
+    contenu = choix["message"].get("content")
+    if contenu is None:
+        raison = choix.get("finish_reason", "inconnue")
+        refus = choix["message"].get("refusal")
+        raise RuntimeError(
+            f"OpenRouter a renvoye un contenu vide (finish_reason={raison}, refusal={refus}). "
+            f"Reponse brute: {donnees}"
+        )
+    return contenu
 
 
 def generate_script(prompt: str) -> str:
